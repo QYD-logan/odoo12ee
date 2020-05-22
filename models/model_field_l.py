@@ -62,10 +62,15 @@ class AddLabelFields(models.Model):
     def unlink(self):
         print('删除标签字段操作')
         # 获取标签行模型,
-        label_line = self.env['add.label.line'].search([('label_field_id', '=', self.id)])
-        print(label_line, 'label_line')
-        if label_line:
-            raise ValidationError(_("此字段已被标签使用请先删除标签再来处理!"))
+        name = ''
+        for one in self:
+            label_line_env = self.env['add.label.line'].search([('label_field_id', '=', one.id)])
+            for label_line in label_line_env:
+                if label_line.label_id.active:
+                    for line in label_line:
+                        name += str(line.label_id.label_name)
+                    if label_line:
+                        raise ValidationError(_("此字段已被名字为:%s的标签使用请先删除标签再来处理!") % name)
 
     @api.multi
     def write(self, vals):
