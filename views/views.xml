@@ -1,0 +1,74 @@
+<odoo>
+    <data>
+
+
+        <!-- Action to open the Book list -->
+        <act_window id="action_add_label"
+                    name="添加标签"
+                    res_model="add.label"
+                    view_mode="tree,form"
+        />
+        <!-- Menu item to open the Book list -->
+        <menuitem id="menu_add_label"
+                  name="标签"
+                  parent="base.menu_email"/>
+        <!--        action="add_label_type_action"-->
+        />
+        <!-- explicit list view definition -->
+        <!--
+        <record model="ir.ui.view" id="add_label.list">
+          <field name="name">add_label list</field>
+          <field name="model">add_label.add_label</field>
+          <field name="arch" type="xml">
+            <tree>
+              <field name="name"/>
+              <field name="value"/>
+              <field name="value2"/>
+            </tree>
+          </field>
+        </record>
+        -->
+
+        <!-- actions opening views on models -->
+        <!--
+        <record model="ir.actions.act_window" id="add_label.action_window">
+          <field name="name">add_label window</field>
+          <field name="res_model">add_label.add_label</field>
+          <field name="view_mode">tree,form</field>
+        </record>
+        -->
+
+        <!-- server action to the one above -->
+        <!--
+        <record model="ir.actions.server" id="add_label.action_server">
+          <field name="name">add_label server</field>
+          <field name="model_id" ref="model_add_label_add_label"/>
+          <field name="state">code</field>
+          <field name="code">
+            action = {
+              "type": "ir.actions.act_window",
+              "view_mode": "tree,form",
+              "res_model": self._name,
+            }
+          </field>
+        </record>
+        -->
+
+        <!-- Top menu item -->
+        <!--
+        <menuitem name="add_label" id="add_label.menu_root"/>
+        -->
+        <!-- menu categories -->
+        <!--
+        <menuitem name="Menu 1" id="add_label.menu_1" parent="add_label.menu_root"/>
+        <menuitem name="Menu 2" id="add_label.menu_2" parent="add_label.menu_root"/>
+        -->
+        <!-- actions -->
+        <!--
+        <menuitem name="List" id="add_label.menu_1_list" parent="add_label.menu_1"
+                  action="add_label.action_window"/>
+        <menuitem name="Server to list" id="add_label" parent="add_label.menu_2"
+                  action="add_label.action_server"/>
+        -->
+    </data>
+</odoo>

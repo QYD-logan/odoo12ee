@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_add_label_add_label,add_label.add_label,model_add_label,,1,1,1,1
+access_add_label_line,access_add_label_line,model_add_label_line,,1,1,1,1
+access_add_label_fields,access_add_label_fields,model_add_label_fields,,1,1,1,1
+access_add_label,access_add_label,model_add_label,,1,0,0,0

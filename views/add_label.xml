@@ -1,0 +1,66 @@
+<!--在设置里面的基本设置中增加标签的选择和属性 -->
+
+<odoo>
+    <data>
+        <record id="add_label_view_form" model="ir.ui.view">
+            <field name="name">res.config.settings.view.form.inherit.hr.payroll</field>
+            <field name="model">res.config.settings</field>
+            <field name="priority" eval="100"/>
+            <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[@id='emails']" position="after">
+                    <h2>标签</h2>
+                    <div class="row mt16 o_settings_container" id="user_default_rights">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="module_name_product"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <!--                                    <label string="加个问题" for="module_base_import"/>-->
+                                <div class="text-muted">
+                                    产品
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box" groups="base.group_no_one">
+                            <div class="o_setting_left_pane">
+                                <field name="module_name_sale"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <!--                                    <label for="show_effect"/>-->
+                                <div class="text-muted">
+                                    销售
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt16 o_settings_container" id="user_default_rights1">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="module_name_manu"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <!--                                    <label string="加个问题" for="module_base_import"/>-->
+                                <div class="text-muted">
+                                    制造
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box" groups="base.group_no_one">
+                            <div class="o_setting_left_pane">
+                                <field name="module_name_procurement"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <!--                                    <label for="show_effect"/>-->
+                                <div class="text-muted">
+                                    采购
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

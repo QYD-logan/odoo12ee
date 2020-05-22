@@ -1,0 +1,142 @@
+<!--点击技术的时候增加标签-->
+<odoo>
+    <record id="add_label_type_view_form" model="ir.ui.view">
+        <field name="name">标签</field>
+        <field name="model">add.label</field>
+        <field name="arch" type="xml">
+            <form name="标签">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+
+                        <button string="字段管理" type="object" name="action_view_label_fields"
+                                class="oe_stat_button" icon="fa-refresh" options="{}"/>
+
+                        <button class="oe_stat_button" type="object" name="toggle_active" icon="fa-archive">
+                            <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
+                        </button>
+                    </div>
+                    <h2>
+                        <field name="label_name"/>
+                    </h2>
+                    <group>
+                        <group>
+                            <field name="apply_to_model"/>
+                            <field name="label_note"/>
+                        </group>
+                        <group>
+                            <field name="label_summary"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <!--                            <page string="字段22" name="label_line">-->
+                        <!--                                <field name="label_line" widget="section_and_note_one2many" mode="tree,kanban"/>-->
+                        <!--                            </page>-->
+                        <page string="属性">
+                            <field name="label_line" widget="section_and_note_one2many" mode="tree,kanban">
+                                <tree string="标签行" editable="bottom">
+                                    <field name="sequence" invisible="1" widget="handle"/>
+                                    <field name="label_field_id" string="字段名称"/>
+                                    <field name="field_description" string="字段标签"
+                                           widget="section_and_note_text"/>
+                                    <field name="field_ttype" string="字段类型"/>
+                                    <field name="infos" string="字段备注"/>
+                                    <button name="action_show_details" string="Register lots, packs, location"
+                                            type="object" icon="fa-list"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+            <!--             <tree string="add.label.line" editable="bottom" >-->
+            <!--                <control>-->
+            <!--                    <create string="add.label.line"/>-->
+            <!--                </control>-->
+            <!--             </tree>-->
+        </field>
+    </record>
+
+
+    <record id="add_label_line_view_form" model="ir.ui.view">
+        <field name="name">add.label.line.view.form</field>
+        <field name="model">add.label.line</field>
+        <field name="arch" type="xml">
+            <form name="添加字段">
+                <sheet>
+                    <h3>
+                        <field name="field_id" string=""/>
+                    </h3>
+                    <group>
+                        <group>
+                            <field name="size"/>
+                            <field name="required"/>
+                            <field name="readonly"/>
+                            <field name="copied"/>
+                            <field name="store"/>
+                            <field name="help"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="add_label_type_view_tree" model="ir.ui.view">
+        <field name="name">add.label.view.tree1</field>
+        <field name="model">add.label</field>
+        <field name="arch" type="xml">
+            <tree string="标签">
+                <field name="label_name" string="标签名称"/>
+                <field name="label_summary" string="摘要"/>
+                <field name="apply_to_model" string="模型"/>
+                <field name="label_note" string="备注"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="add_label_type_action" model="ir.actions.act_window">
+        <field name="name">标签</field>
+        <field name="res_model">add.label</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem
+            id="add_label_activity_type"
+            name="便签"
+            action="add_label_type_action"
+            parent="base.menu_email"
+    />
+</odoo>
+
+
+        <!--                            <tree string="Sales Order Lines" editable="bottom">-->
+        <!--                                    <control>-->
+        <!--                                        <create string="Add a product"/>-->
+        <!--                                    </control>-->
+
+        <!--                                    <field name="sequence" widget="handle"/>-->
+        <!--                                    &lt;!&ndash; We do not display the type because we don't want the user to be bothered with that information if he has no section or note. &ndash;&gt;-->
+
+        <!--                                    <field name="product_id" attrs="{                                             'readonly': [('product_updatable', '=', False)],                                             'required': [('display_type', '=', False)],                                         }" force_save="1" context="{                                             'partner_id': parent.partner_id,                                             'quantity': product_uom_qty,                                             'pricelist': parent.pricelist_id,                                             'uom':product_uom,                                             'company_id': parent.company_id,                                             'default_lst_price': price_unit,                                             'default_description_sale': name                                         }"/>-->
+        <!--                                    <field name="product_custom_attribute_value_ids" invisible="1"/>-->
+        <!--                                    <field name="product_no_variant_attribute_value_ids" invisible="1"/>-->
+        <!--                                    <field name="name" widget="section_and_note_text"/>-->
+        <!--                                    <field name="product_uom_qty" string="Ordered Qty" context="{                                             'partner_id': parent.partner_id,                                             'quantity': product_uom_qty,                                             'pricelist': parent.pricelist_id,                                             'uom': product_uom,                                             'company_id': parent.company_id                                         }"/>-->
+        <!--                                    <field name="qty_delivered" attrs="{                                             'column_invisible': [('parent.state', 'not in', ['sale', 'done'])],                                             'readonly': [('qty_delivered_method', '!=', 'manual')]                                         }"/>-->
+        <!--                                    <field name="qty_delivered_manual" invisible="1"/>-->
+        <!--                                    <field name="qty_delivered_method" invisible="1"/>-->
+        <!--                                    <field name="qty_invoiced" attrs="{'column_invisible': [('parent.state', 'not in', ['sale', 'done'])]}"/>-->
+        <!--                                    <field name="qty_to_invoice" invisible="1"/>-->
+        <!--                                    <field name="product_uom" attrs="{                                             'readonly': [('state', 'in', ('done', 'cancel'))],                                             'required': [('display_type', '=', False)],                                         }" context="{'company_id': parent.company_id}" groups="uom.group_uom" options="{&quot;no_open&quot;: True}"/>-->
+        <!--                                    <field name="analytic_tag_ids" groups="analytic.group_analytic_tags" widget="many2many_tags"/>-->
+        <!--                                    <field name="price_unit" attrs="{'readonly': [('qty_invoiced', '&gt;', 0)]}"/>-->
+        <!--                                    <field name="tax_id" widget="many2many_tags" options="{'no_create': True}" domain="[('type_tax_use','=','sale'),('company_id','=',parent.company_id)]" attrs="{'readonly': [('qty_invoiced', '&gt;', 0)]}"/>-->
+        <!--                                    <field name="discount" groups="sale.group_discount_per_so_line"/>-->
+        <!--                                    <field name="price_subtotal" widget="monetary" groups="account.group_show_line_subtotals_tax_excluded"/>-->
+        <!--                                    <field name="price_total" widget="monetary" groups="account.group_show_line_subtotals_tax_included"/>-->
+        <!--                                    <field name="state" invisible="1"/>-->
+        <!--                                    <field name="invoice_status" invisible="1"/>-->
+        <!--                                    <field name="customer_lead" invisible="1"/>-->
+        <!--                                    <field name="currency_id" invisible="1"/>-->
+        <!--                                </tree>-->
