@@ -130,10 +130,10 @@ class AddLabel(models.Model):
         print(values, '多行标签的情况')
         # 在对应的模型中添加字段
         # 这里处理多行的情况(for一下)
-        self.create_new_field(values)
-        # 给对应模型中的from视图添加对应的页签页面
-        self.add_page_to_model_form(values)
-
+        if self.active:
+            self.create_new_field(values)
+            # 给对应模型中的from视图添加对应的页签页面
+            self.add_page_to_model_form(values)
         return super(AddLabel, self).create(values)
 
     # (原本数据中的信息系) write函数写入到这个模型中去write 删除还是增加都是在这个模型中
@@ -149,26 +149,91 @@ class AddLabel(models.Model):
 
     @api.multi
     def write(self, vals):
-        print('修改标签(头部和行的操作')
-        print(self.read(), 'self.read()')
-        print(vals, 'vals.readsss')
         # 检查不对应的模型是不是不一样
-        try:
-            if self.active and vals['apply_to_model']:
-                pass
-        except Exception:
-            values = {}
-            values['apply_to_model'] = self.apply_to_model.id
-            for new_line in vals['label_line']:
-                if new_line[-1]:
-                    values['label_line'] = [new_line]
-                    print(values, '最后传入的值')
-                    # 这在调用函数曾加字段
-                    self.create_new_field(values)
+        print('active' in vals, 'vals')
+        if 'active' in vals.keys():  # 有动归档这个东西?
+            if vals['active']:  # 这里变成了true
+                # 如果同时动了active也动了其他的东西
+                if len(vals) != 1:
+                    raise ValueError(_('归档案件不能和其他的信息一同编辑'))
+                else:
+                    print('这里是变成true的,恢复所有的字段增加')
+                    # 直接调用create方法和新增标签一样
+                    values = {}
+                    values['apply_to_model'] = self.apply_to_model.id
+                    for new_line in self.label_line:
+                        values['label_line'] = [new_line]
+                        print(values, 'true时最后传入的值')
+                        # 这在调用函数曾加字段
+                        self.create_new_field(values)
+            else:
+                print('这里是归档?  # 删除所有字段中的值')
+                for line in self.label_line:
+                    field_env = self.env['ir.model.fields'].search([('name', '=', line.label_field_id.name)])
+                    field_env.unlink()
+
+            # 修改减少标签的时候需要调用删除对模型中的数据进行修改
         else:
-            raise ValidationError(_("已经使用标签关联的模型不允许更改"))
+            # 增加行的时候处理的问题
+            try:
+                if self.active and vals['apply_to_model']:
+                    pass
+            except Exception:
+                values = {}
+                values['apply_to_model'] = self.apply_to_model.id
+                for new_line in vals['label_line']:
+                    if new_line[-1]:
+                        values['label_line'] = [new_line]
+                        print(values, '最后传入的值')
+                        # 这在调用函数曾加字段
+                        self.create_new_field(values)
+            else:
+                if self.active:
+                    raise ValidationError(_("已经使用标签关联的模型不允许更改"))
+
+            # 删除行的时候处理的问题
+            # 获取是[2,38,false]这种情况
+            # 将字段信息给到 ir.model.fields(7993,).unlink() 就行了
+            line_id = self['label_line']
+            # 订单行
+            lines = vals['label_line']
+            # 这里是将active的false装换出有true了 有效了
+            # 需要将整个数据都不删除
+            print(lines, 'lines')
+            # 新增加和减少的字段走这里
+            for op in lines:
+                if op[0] == 2:
+                    for line in line_id:
+                        print(line.id, op[1], 'line')
+                        if op[1] == line.id:
+                            # 获取标签行的环境
+                            line_env = self.env['add.label.line'].search([('id', '=', line.id)])
+                            field_env = self.env['ir.model.fields'].search([('name', '=', line_env.label_field_id.name),
+                                                                            ('model', '=', self.apply_to_model.model)])
+                            print(field_env, '需要删除的值field_env')
+                            field_env.unlink()  # 删除对应的模型字段
 
         return super(AddLabel, self).write(vals)
+
+    # @api.multi
+    # def unlink(self):
+    #     print('这里处理的是删除的操作')
+    #     # 校验是不是标签都删除了
+    #     print(self.read(),'这里处理删除')
+    #     #
+
+    # @api.multi
+    # @api.onchange('active')
+    # def onchange_active(self):
+    #     """
+    #     active 是对标签的归档处理当active不是flace的时候这个标签是不能用的需要将标签中的数据全部删除,如果启用则需用重新创建
+    #     :return:
+    #     """
+    #     print(self.read(),'11111')
+    #     if self.active:
+    #         print('111')
+    #     else:
+    #         print('222')
 
 
 class AddLabelLine(models.Model):
@@ -197,16 +262,36 @@ class AddLabelLine(models.Model):
     @api.multi
     @api.onchange('label_field_id')
     def _get_name_value(self):
+        """
+        当改变增加标签行的时候如果字段已经在此模型值提示不能增加
+        :return:
+        """
+        # 获取标签中的全部字段行
+        # label_env = self.label_id.label_line
+        # for label_field in label_env:
+        #     print(label_field.label_field_id.name, 'label_envlabel_id')
+        #     if self.label_field.name == label_field.label_field_id.name:
+        #         raise UserError(_('此字段已经添加请勿重复添加'))
+        # 如果此字段在模型中已经有则提示不能继续添加此字段
+        # 获取模型的自定义字段
+        print(self.label_id.apply_to_model.id, 'self.label_id.apply_to_model.id')
+        print(self.label_field_id.name, 'self.label_field_id.name')
+        model_env = self.env['ir.model'].search([('id', '=', self.label_id.apply_to_model.id),
+                                                 ])
+        model_manual_env = model_env.field_id
+        for manual_id in model_manual_env:
+            if manual_id.state == 'manual' and manual_id.name == self.label_field_id.name:
+                raise ValidationError(_('%s字段在%s中存在') % (self.label_field_id.name, self.label_id.apply_to_model.name))
         self.name = self.label_field_id.name
         self.field_description = self.label_field_id.field_description
         self.infos = self.label_field_id.infos
         self.field_ttype = self.label_field_id.ttype
 
-    # @api.multi
-    # @api.onchange('label_id.active')
-    # def change_fields_sate(self):
-    #     """
-    #     这里需要处理的问题是当标签中的active 变成归档也就是取消标签的时候我们对标签中的字段进行处理
-    #     :return:
-    #     """
-    #     pass
+    @api.multi
+    @api.onchange('label_id.active')
+    def change_fields_sate(self):
+        """
+        当改变增加标签行的时候如果字段已经在此模型值提示不能增加
+        :return:
+        """
+        pass
