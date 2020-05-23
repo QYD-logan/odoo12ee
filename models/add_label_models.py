@@ -222,18 +222,13 @@ class AddLabel(models.Model):
     #     print(self.read(),'这里处理删除')
     #     #
 
-    # @api.multi
-    # @api.onchange('active')
-    # def onchange_active(self):
-    #     """
-    #     active 是对标签的归档处理当active不是flace的时候这个标签是不能用的需要将标签中的数据全部删除,如果启用则需用重新创建
-    #     :return:
-    #     """
-    #     print(self.read(),'11111')
-    #     if self.active:
-    #         print('111')
-    #     else:
-    #         print('222')
+    @api.multi
+    def add_page_to_from(self):
+        """
+        增加标签的时候相对应的模型的from视图中增加一个页签
+        :return:
+        """
+        pass
 
 
 class AddLabelLine(models.Model):
