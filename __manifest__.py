@@ -2,10 +2,10 @@
 {
         'name':"添加标签",
         'application':True,
-        'sequence':1,
+        'sequence':10,
 
         'summary':"""
-        添加标签ha de """,
+        添加标签 """,
 
         'description':"""
         添加标签
@@ -27,14 +27,16 @@
         'data':[
                 # 'security/add_label_group.xml',
                 'security/ir.model.access.csv',
-                'views/views.xml',
-                # # 'views/templates.xml',
-                'views/add_label.xml',
+                # 'views/views.xml',
+                'views/templates.xml',
+                # 'views/add_label.xml',
                 'views/add_hear_label.xml',
                 'views/add_fields_l.xml',
+
+                'wizard/btm.label.value.xml',
                 ],
         # only loaded in demonstration mode
         'demo':[
-                'demo/demo.xml',
+                # 'demo/demo.xml',
                 ],
         }

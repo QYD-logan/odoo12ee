@@ -8,12 +8,24 @@
                 <sheet>
                     <div class="oe_button_box" name="button_box">
 
+                        <!--                        <button string="查看xml的内容" type="object" name="check_allres"-->
+                        <!--                                class="oe_stat_button" icon="fa-refresh" options="{}"/>-->
+
+                        <!--                         <button string="删除动作" type="object" name="delete_action"-->
+                        <!--                                class="oe_stat_button" icon="fa-refresh" options="{}"/>-->
+
+                        <!--                        <button string="加动作" type="object" name="create_action_to_tree"-->
+                        <!--                                class="oe_stat_button" icon="fa-refresh" options="{}"/>-->
+
+                        <!--                        <button string="加页签" type="object" name="add_page_to_from"-->
+                        <!--                                class="oe_stat_button" icon="fa-refresh" options="{}"/>-->
+
+                        <button string="模型记录(多个标签)" type="object" name="action_view_model_tree"
+                                class="oe_stat_button" icon="fa-refresh" options="{}"
+                                attrs="{'invisible': [('apply_to_model','=',False)]}"/>
+
                         <button string="字段管理" type="object" name="action_view_label_fields"
                                 class="oe_stat_button" icon="fa-refresh" options="{}"/>
-
-                        <button class="oe_stat_button" type="object" name="toggle_active" icon="fa-archive">
-                            <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
-                        </button>
                     </div>
                     <h2>
                         <field name="label_name"/>
@@ -28,9 +40,6 @@
                         </group>
                     </group>
                     <notebook>
-                        <!--                            <page string="字段22" name="label_line">-->
-                        <!--                                <field name="label_line" widget="section_and_note_one2many" mode="tree,kanban"/>-->
-                        <!--                            </page>-->
                         <page string="属性">
                             <field name="label_line" widget="section_and_note_one2many" mode="tree,kanban">
                                 <tree string="标签行" editable="bottom">
@@ -48,11 +57,6 @@
                     </notebook>
                 </sheet>
             </form>
-            <!--             <tree string="add.label.line" editable="bottom" >-->
-            <!--                <control>-->
-            <!--                    <create string="add.label.line"/>-->
-            <!--                </control>-->
-            <!--             </tree>-->
         </field>
     </record>
 
@@ -103,40 +107,8 @@
 
     <menuitem
             id="add_label_activity_type"
-            name="便签"
+            name="标签"
             action="add_label_type_action"
             parent="base.menu_email"
     />
 </odoo>
-
-
-        <!--                            <tree string="Sales Order Lines" editable="bottom">-->
-        <!--                                    <control>-->
-        <!--                                        <create string="Add a product"/>-->
-        <!--                                    </control>-->
-
-        <!--                                    <field name="sequence" widget="handle"/>-->
-        <!--                                    &lt;!&ndash; We do not display the type because we don't want the user to be bothered with that information if he has no section or note. &ndash;&gt;-->
-
-        <!--                                    <field name="product_id" attrs="{                                             'readonly': [('product_updatable', '=', False)],                                             'required': [('display_type', '=', False)],                                         }" force_save="1" context="{                                             'partner_id': parent.partner_id,                                             'quantity': product_uom_qty,                                             'pricelist': parent.pricelist_id,                                             'uom':product_uom,                                             'company_id': parent.company_id,                                             'default_lst_price': price_unit,                                             'default_description_sale': name                                         }"/>-->
-        <!--                                    <field name="product_custom_attribute_value_ids" invisible="1"/>-->
-        <!--                                    <field name="product_no_variant_attribute_value_ids" invisible="1"/>-->
-        <!--                                    <field name="name" widget="section_and_note_text"/>-->
-        <!--                                    <field name="product_uom_qty" string="Ordered Qty" context="{                                             'partner_id': parent.partner_id,                                             'quantity': product_uom_qty,                                             'pricelist': parent.pricelist_id,                                             'uom': product_uom,                                             'company_id': parent.company_id                                         }"/>-->
-        <!--                                    <field name="qty_delivered" attrs="{                                             'column_invisible': [('parent.state', 'not in', ['sale', 'done'])],                                             'readonly': [('qty_delivered_method', '!=', 'manual')]                                         }"/>-->
-        <!--                                    <field name="qty_delivered_manual" invisible="1"/>-->
-        <!--                                    <field name="qty_delivered_method" invisible="1"/>-->
-        <!--                                    <field name="qty_invoiced" attrs="{'column_invisible': [('parent.state', 'not in', ['sale', 'done'])]}"/>-->
-        <!--                                    <field name="qty_to_invoice" invisible="1"/>-->
-        <!--                                    <field name="product_uom" attrs="{                                             'readonly': [('state', 'in', ('done', 'cancel'))],                                             'required': [('display_type', '=', False)],                                         }" context="{'company_id': parent.company_id}" groups="uom.group_uom" options="{&quot;no_open&quot;: True}"/>-->
-        <!--                                    <field name="analytic_tag_ids" groups="analytic.group_analytic_tags" widget="many2many_tags"/>-->
-        <!--                                    <field name="price_unit" attrs="{'readonly': [('qty_invoiced', '&gt;', 0)]}"/>-->
-        <!--                                    <field name="tax_id" widget="many2many_tags" options="{'no_create': True}" domain="[('type_tax_use','=','sale'),('company_id','=',parent.company_id)]" attrs="{'readonly': [('qty_invoiced', '&gt;', 0)]}"/>-->
-        <!--                                    <field name="discount" groups="sale.group_discount_per_so_line"/>-->
-        <!--                                    <field name="price_subtotal" widget="monetary" groups="account.group_show_line_subtotals_tax_excluded"/>-->
-        <!--                                    <field name="price_total" widget="monetary" groups="account.group_show_line_subtotals_tax_included"/>-->
-        <!--                                    <field name="state" invisible="1"/>-->
-        <!--                                    <field name="invoice_status" invisible="1"/>-->
-        <!--                                    <field name="customer_lead" invisible="1"/>-->
-        <!--                                    <field name="currency_id" invisible="1"/>-->
-        <!--                                </tree>-->

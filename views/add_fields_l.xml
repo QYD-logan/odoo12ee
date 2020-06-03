@@ -10,10 +10,10 @@
                 <field name="ttype"/>
                 <field name="infos"/>
                 <field name="readonly"/>
-                <!--                <field name="label_line_ids"/>-->
             </tree>
         </field>
     </record>
+
     <!--    from 视图-->
     <record id="add_label_fields_view_form" model="ir.ui.view">
         <field name="name">add.label.fields.type.view.form</field>
@@ -29,18 +29,17 @@
                             <field name="field_description"/>
                             <field name="help"/>
                             <field name="ttype"/>
-                            <field name="required"/>
+<!--                            <field name="required"/>-->
                             <field name="index"/>
                             <field name="domain"/>
                             <field name="groups"/>
                             <field name="store"/>
                         </group>
                         <group>
-                            <field name="relation"/>
+                            <!--                            <field name="relation"/>-->
                             <field name="infos"/>
-                            <field name="copied"/>
+                            <!--                            <field name="copied"/>-->
                             <field name="readonly"/>
-                            <!--                            <field name="size"/>-->
                             <field name="state"/>
                         </group>
                     </group>
@@ -48,7 +47,7 @@
             </form>
         </field>
     </record>
-    <!--    搜索视图(还没写后面再写)-->
+
     <!--    动作视图,后端调用的这个id-->
     <record id="add_label_fields_action" model="ir.actions.act_window">
         <field name="name">标签字段</field>
@@ -56,23 +55,5 @@
         <field name="type">ir.actions.act_window</field>
         <field name="view_type">form</field>
         <field name="view_mode">tree,form</field>
-        <!--            <field name="view_id" ref="view_move_line_tree"/>-->
-        <!--            <field name="context">{'search_default_done': 1, 'search_default_groupby_product_id': 1}</field>-->
-        <!--            <field name="help" type="html">-->
-        <!--              <p class="o_view_nocontent_empty_folder">-->
-        <!--                There's no product move yet-->
-        <!--              </p>-->
-        <!--            </field>-->
     </record>
-
-    <!--    <menuitem-->
-    <!--        action="stock_move_line_action"-->
-    <!--        id="stock_move_line_menu"-->
-    <!--        parent="stock.menu_warehouse_report" sequence="150"/>-->
 </odoo>
-
-
-        <!--<button string="产品移动" type="object" name="action_view_stock_move_lines" class="oe_stat_button" icon="fa-arrows-v" modifiers="{'invisible':[['type','not in',['product','consu']]]}" options="{}"/>-->
-        <!--			<button type="object" name="action_view_orderpoints" attrs="{'invisible':['|',('type', '!=', 'product'),('nbr_reordering_rules', '==', 1)]}" class="oe_stat_button" icon="fa-refresh" modifiers="{'invisible':['|',['type','!=','product'],['nbr_reordering_rules','==',1]]}" options="{}">-->
-        <!--				<field name="nbr_reordering_rules" widget="statinfo" modifiers="{'readonly':true}"/>-->
-        <!--			</button>-->

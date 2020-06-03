@@ -1,0 +1,21 @@
+<!--<?xml version="1.0" encoding="UTF-8"?>-->
+<!--<template id="template" xml:space="preserve">-->
+<!--    &lt;!&ndash; 拓展Tree视图增加自定义按钮 &ndash;&gt;-->
+<!--    <t t-extend="ListView.buttons">-->
+<!--        <t t-jquery="button.o_list_button_save" t-operation="after">-->
+<!--            <t t-foreach="['sale.order','2','3']" t-as="model_name">-->
+<!--                <t t-if="widget.modelName == 'model_name'">-->
+<!--                    <t t-log="model_name">-->
+<!--                    <button type="button" class="btn btn-secondary o_list_tender_button_say_hello" style="display:inline-block;">标签管理</button>-->
+<!--                    </t>-->
+<!--                </t>-->
+<!--            </t>-->
+<!--        </t>-->
+<!--    </t>-->
+<!--    &lt;!&ndash;     拓展Form视图增加自定义按钮 &ndash;&gt;-->
+<!--&lt;!&ndash;    <t t-extend="FormView.buttons">&ndash;&gt;-->
+<!--&lt;!&ndash;        <t t-jquery="button.o_form_button_create" t-operation="after">&ndash;&gt;-->
+<!--&lt;!&ndash;            <button type="button" class="btn btn-secondary o_list_tender_button_say_hello" style="display:inline-block;">标签管理</button>&ndash;&gt;-->
+<!--&lt;!&ndash;        </t>&ndash;&gt;-->
+<!--&lt;!&ndash;    </t>&ndash;&gt;-->
+<!--</template>-->

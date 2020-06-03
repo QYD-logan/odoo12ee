@@ -1,0 +1,30 @@
+<odoo>
+    <record id="btm_label_wizard_view_from" model="ir.ui.view">
+        <field name="name">btm.label.value.wizard.form</field>
+        <field name="model">btm.label.value</field>
+        <field name="arch" type="xml">
+            <form string="标签管理">
+                <heard string="标签值">
+                </heard>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="label_select_field"/>
+                            <field name="label_select_field_value" placeholder='填写标签的值或文字,默认为空'/>
+                        </group>
+                        <group attrs="{'invisible': [('label_select_field', '=', False)]}" readonly='True'>
+                            <field name="label_field_name" readonly='True'/>
+                            <field name="label_field_description" readonly="1"/>
+                            <field name="ttype" readonly="1"/>
+                            <field name="old_value" readonly="1" attrs="{'invisible': [('old_value', '=', False)]}"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="to_value" string="确认" type="object" class="oe_highlight"/>
+                        <button special="cancel" string="取消" class="oe_link"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>
