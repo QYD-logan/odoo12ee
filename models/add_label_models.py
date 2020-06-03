@@ -104,7 +104,7 @@ class AddLabel(models.Model):
         else:
             for result in values['label_line']:
                 self.create_new_field(result, models_name_env)
-                res = super(AddLabel, self).create(values)
+            res = super(AddLabel, self).create(values)
             self.add_page_to_from(models_name_env)  # 添加页签
             self.create_action_to_tree(models_name_env)  # 添加动作
         return res
