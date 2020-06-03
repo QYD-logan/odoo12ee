@@ -198,7 +198,7 @@ class AddLabel(models.Model):
                     field_env.unlink()  # 删除字段
                     self._update_model()
                 else:
-                    self_one.delete_page_to_from()
+                    self_one.delete_page_to_from()  # 删除页签
                     self._update_model()
                     field_env = self.env['ir.model.fields'].search([('name', '=', line.label_field_id.name),
                                                                     ('model', '=', model_env.model)])
@@ -320,15 +320,15 @@ class AddLabel(models.Model):
             # 获取对应模型的自定义字段
             model_env = self.env['ir.model'].search([('id', '=', self.apply_to_model.id)])
             for label in label_env:
-                print(delete_label, ',,', label)
                 for label_line in label.label_line:
                     field_env = self.env['ir.model.fields'].search([('name', '=', label_line.label_field_id.name),
                                                                     ('model', '=', model_env.model)])
-                    if label_line.label_field_id.name == field_env.name:  # 去报对模型中有这个字段
-                        field_name = label_line.label_field_id.name  # 这个是标签字段的名字 如 x_sale 这样的字段(这里有多个)
-                        field_description = label_line.label_field_id.field_description
-                        xml_page_field = etree.SubElement(xml_node, 'field', {'name':field_name})
-                        xml_page_field.attrib['string'] = _(field_description)
+                    if delete_label != label:
+                        if label_line.label_field_id.name == field_env.name:  # 去报对模型中有这个字段
+                            field_name = label_line.label_field_id.name  # 这个是标签字段的名字 如 x_sale 这样的字段(这里有多个)
+                            field_description = label_line.label_field_id.field_description
+                            xml_page_field = etree.SubElement(xml_node, 'field', {'name':field_name})
+                            xml_page_field.attrib['string'] = _(field_description)
 
         # Create the actual node inside the xpath. It needs to be the first
         # child of the xpath to respect the order in which they were added.
