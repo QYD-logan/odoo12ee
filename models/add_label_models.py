@@ -49,19 +49,24 @@ class AddLabel(models.Model):
 
     models_summary = fields.Char(string=u'使用标签的模型')
 
+    # 这里检查是不是全部是删除了这个东西
     @api.multi
-    def get_labelfield_sum(self, self_m, self_one):
+    def get_label_field_sum(self, models_key, fields_value):
         """
-        计算这个label模型字段中的
+        计算这个label模型字段并判断字段是不是已经删除完全
         :return:
         """
-        result = self.search([('apply_to_model.id', '=', self_one.apply_to_model.id)])
-        count = 0  # 本次删除的是几条
-        for self1 in self_m:
-            if self_one.apply_to_model == self1.apply_to_model:
+        # 获取对应模型的id
+        models_env = self.env['ir.model'].search([('model', '=', models_key)])
+        models_env_all = self.search([('apply_to_model.id', '=', models_env.id)])  # 全部的
+        count = 0
+        for models_env_one in models_env_all:
+            for line in models_env_one.label_line:
                 count += 1
-        chsm = len(result) - count  # 最后结果的总数
-        return chsm
+        if count - len(fields_value) > 0:
+            return False
+        else:
+            return True
 
     @api.model
     def create_new_field(self, values, models_name_env):
@@ -93,9 +98,15 @@ class AddLabel(models.Model):
         new_field = self.env['ir.model.fields'].create(value)
         return new_field
 
+    # 创建数据的时候的处理的东西
     @api.model
     def create(self, values):
-        # 这里处理多行的情况-
+        """
+        创建标的方法
+        :param values: 创建标签的值和信息
+        :return: None
+        """
+        # 这里处理多行的情况
         models_name_env = self.env['ir.model'].search([('id', '=', values['apply_to_model'])])
         try:
             values['label_line']
@@ -128,12 +139,12 @@ class AddLabel(models.Model):
         """
         model_env = self.env['ir.model'].search([('id', '=', self.apply_to_model.id)])
         return {
-                'name':'模型记录',
-                'type':'ir.actions.act_window',
-                'view_type':'form',
-                'res_model':model_env.model,
-                "view_mode":'tree,form',
-                }
+            'name': '模型记录',
+            'type': 'ir.actions.act_window',
+            'view_type': 'form',
+            'res_model': model_env.model,
+            "view_mode": 'tree,form',
+        }
 
     # onchange(改变模型的时候提醒)
     @api.multi
@@ -154,6 +165,11 @@ class AddLabel(models.Model):
     # 写入操作
     @api.multi
     def write(self, vals):
+        """
+        这里是对修改是的操作
+        :param vals: 修改后的内容
+        :return: none
+        """
         models_name_env = self.env['ir.model'].search([('id', '=', self.apply_to_model.id)])
         try:
             vals['label_line']
@@ -167,48 +183,95 @@ class AddLabel(models.Model):
                     self.create_action_to_tree(models_name_env)  # 创建动作
                     # 新增页签
                     self.add_page_to_from(models_name_env)  # 增加页签
+            
                 elif res[0] == 2:  # 这个是删除行
-
-                    result = super(AddLabel, self).write(vals)
                     line_env = self.env['add.label.line'].search([('id', '=', res[1])])
-                    self.delete_page_to_from()  # 删除页签
+                    models_name = models_name_env.model  # 这个需要的是sale,order这样的名字
+                    fields_name = line_env.label_field_id.name
+                    self.delete_page_to_from(models_name, fields_name)  # 删除页签 这里调用过需要处理下 模型的id 和需要删除的字段名称fields_value
                     field_env = self.env['ir.model.fields'].search([('name', '=', line_env.label_field_id.name),
                                                                     ('model', '=', self.apply_to_model.model)])
                     field_env.unlink()  # 删除对应的模型字段
+                    result = super(AddLabel, self).write(vals)
             return result
 
-    # 删除标签的方法
+    @api.multi
+    def check_label_be_useing(self, results_all):
+        """
+        检查删除的这这些标签是不是被使用了
+        :return:
+        """
+        # 这里有多个模型
+        results_used = {}
+        for models_name in results_all:
+            field_used = []
+            model_env = self.env['ir.model'].search([('model', '=', models_name)])
+            for field_one in results_all[models_name]:  # 这里是单个的字段
+                results_v = self.env[models_name].search([(field_one, '!=', False)])
+                if results_v:
+                    field_used.append(field_one)
+            results_used[model_env.model] = field_used
+        return results_used
+
+    # 删除标签的法方法
     @api.multi
     def unlink(self):
         """
         删除的功能
-        :return:
+        :return:返回supper的数据信息
         """
-        self_m = self
-        for self_one in self:
-            model_env = self.env['ir.model'].search([('id', '=', self_one.apply_to_model.id)])
-            num = self.get_labelfield_sum(self_m, self_one)
-            for line in self_one.label_line:
-                if num == 0:
-                    self_one.delete_action()  # 删除动作
-                    self_one.delete_from_page()  # 删除页签
-                    self._update_model()
-                    field_env = self.env['ir.model.fields'].search([('name', '=', line.label_field_id.name),
-                                                                    ('model', '=', model_env.model)])
-                    field_env.unlink()  # 删除字段
-                    self._update_model()
+        results_all = {}
+        if len(self) > 1:
+            for self_one in self:
+                fields_all = []
+                model_env = self.env['ir.model'].search([('id', '=', self_one.apply_to_model.id)])
+                # unlink_model = self_one.apply_to_model.id  # 需要删除的对应模型的id
+                if model_env.model in list(results_all.keys()):
+                    for one_line in self_one.label_line:
+                        results_all[model_env.model].append(one_line.label_field_id.name)
                 else:
-                    self_one.delete_page_to_from()  # 删除页签
-                    self._update_model()
-                    field_env = self.env['ir.model.fields'].search([('name', '=', line.label_field_id.name),
-                                                                    ('model', '=', model_env.model)])
+                    for one_line in self_one.label_line:
+                        fields_all.append(one_line.label_field_id.name)
+                        results_all[model_env.model] = fields_all
+        else:
+            # 这里是删除一个self 里面有很多的行的情况页签不用一个一个的删除
+            value = []
+            model_env = self.env['ir.model'].search([('id', '=', self.apply_to_model.id)])
+            for line in self.label_line:
+                value.append(line.label_field_id.name)
+                results_all[model_env.model] = value
+        # 这里检查是不是被使用过
+        results_u = self.check_label_be_useing(results_all)  # 接受返回的结果 弹窗给定那个字段可以被处理
+        for k in results_u:
+            if results_u[k]:
+                raise UserError(_('不能删除模型已经使用标签字段'))
+                # raise UserError(_('不能删除模型%s中已经使用的%s标签字段') % (k, results_u[k]))
+    
+        # 这里对全部需要删除的东西进行处理掉了
+        for models_key, fields_value in results_all.items():
+            num = self.get_label_field_sum(models_key, fields_value)  # True 删除完全  False没有完全删除
+            if num:
+                self.delete_action(models_key)  # 删除动作
+                self.delete_from_page(models_key)  # 删除页签
+                self._update_model()
+                for value in fields_value:
+                    field_env = self.env['ir.model.fields'].search([('name', '=', value),
+                                                                    ('model', '=', models_key)])
                     field_env.unlink()  # 删除字段
-                    self._update_model()
-            return super(AddLabel, self).unlink()
+            else:
+                self.delete_page_to_from(models_key, fields_value)  # 删除需要删除的页签中的全部字段
+                self._update_model()
+                for value in fields_value:  # 然后一个一个的删除字段
+                    field_env = self.env['ir.model.fields'].search([('name', '=', value),
+                                                                    ('model', '=', models_key)])
+                    field_env.unlink()  # 删除字段
+                # self._update_model()
+        self._update_model()
+        return super(AddLabel, self).unlink()
 
     # 找到模型默认的from视图
     @api.multi
-    def _find_model_default_from(self, model_env, view_type, ):
+    def _find_model_default_from(self, model_env, view_type):
         """
         获取模型中的from视图并返回
         :return: 返回找到的form视图
@@ -216,9 +279,9 @@ class AddLabel(models.Model):
         view_id = None
         View = self.env['ir.ui.view']
         result = {
-                'model':model_env.model,
-                'field_parent':False,
-                }
+            'model': model_env.model,
+            'field_parent': False,
+        }
         # try to find a view_id if none provided
         if not view_id:
             # <view_type>_view_ref in context can be used to overrride the default view
@@ -241,7 +304,6 @@ class AddLabel(models.Model):
                 # otherwise try to find the lowest priority matching ir.ui.view
                 view_id = View.default_view(model_env.model, view_type)
         if view_id:
-            print(view_id, 'view_id')
             # read the view with inherited views applied
             root_view = View.browse(view_id).read_combined(['id', 'name', 'field_parent', 'type', 'model', 'arch'])
             result['arch'] = root_view['arch']
@@ -263,20 +325,21 @@ class AddLabel(models.Model):
 
     # 在from视图中减少对应字段的页签
     @api.multi
-    def delete_page_to_from(self):
+    def delete_page_to_from(self, models_key, fields_value):
         """
         给对应模型后面增加页签
         :return: 返回修正后的结果
         """
         View = self.env['ir.ui.view']
         # Get the view arch and all other attributes describing the composition of the view
-        model_env = self.env['ir.model'].search([('id', '=', self.apply_to_model.id)])
+        models_env = self.env['ir.model'].search([('model', '=', models_key)])
+        model_env = self.env['ir.model'].search([('id', '=', models_env.id)])
         result = self._find_model_default_from(model_env, view_type='form')
         # 获取视图id
         xarch, xfields = View.postprocess_and_fields(
-                model_env.model,
-                etree.fromstring(result['arch']),
-                result['view_id'])
+            model_env.model,
+            etree.fromstring(result['arch']),
+            result['view_id'])
         result['arch'] = xarch
         result['fields'] = xfields
         view_id = result['view_id']
@@ -291,44 +354,43 @@ class AddLabel(models.Model):
                    </data>
                 """)
         view = self.env['ir.ui.view'].browse(view_id)
-        self.delete_page_field(arch)  # 删除后的对应的field加到对应页面上xpath上去
+        self.delete_page_field(arch, models_key, fields_value)  # 删除后的对应的field加到对应页面上xpath上去
         new_arch = etree.tostring(arch, encoding='unicode', pretty_print=True)
         self._set_label_view(view, new_arch)
         ViewModel = self.env[view.model]
         studio_view = self._get_studio_view(view)  # 获取页面的位置并给到数据信息
         fields_view = ViewModel.fields_view_get(view.id, view.type)
         return {
-                'fields_views':fields_view,
-                'fields':ViewModel.fields_get(),
-                'studio_view_id':studio_view.id,
-                }
+            'fields_views': fields_view,
+            'fields': ViewModel.fields_get(),
+            'studio_view_id': studio_view.id,
+        }
 
     # 在视图中减少字段
     @api.multi
-    def delete_page_field(self, arch):
+    def delete_page_field(self, arch, models_key, fields_value):  # fields_value [x_namen,x_nidndi]
         """
         在删除页签上面的字段
-        :return:
+        :return: 返回对应的xpatch
         """
         xpath_node = self._get_xpath_node(arch)
-        delete_label = self
-
+    
         def add_columns(xml_node):  # 将field 到对应的模型中 xml_node这个就是对应的模型
             # 获取模型的全部属性
+            model_env = self.env['ir.model'].search([('model', '=', models_key)])
             label_env = self.env['add.label'].search(
-                    [('apply_to_model.id', '=', self.apply_to_model.id)])  # 这个是对应add
+                [('apply_to_model.id', '=', model_env.id)])  # 这个是对应add
             # 获取对应模型的自定义字段
-            model_env = self.env['ir.model'].search([('id', '=', self.apply_to_model.id)])
             for label in label_env:
                 for label_line in label.label_line:
                     field_env = self.env['ir.model.fields'].search([('name', '=', label_line.label_field_id.name),
-                                                                    ('model', '=', model_env.model)])
-                    if delete_label != label:
-                        if label_line.label_field_id.name == field_env.name:  # 去报对模型中有这个字段
-                            field_name = label_line.label_field_id.name  # 这个是标签字段的名字 如 x_sale 这样的字段(这里有多个)
-                            field_description = label_line.label_field_id.field_description
-                            xml_page_field = etree.SubElement(xml_node, 'field', {'name':field_name})
-                            xml_page_field.attrib['string'] = _(field_description)
+                                                                    ('model', '=', models_key)])
+                    if label_line.label_field_id.name not in fields_value and \
+                            label_line.label_field_id.name == field_env.name:
+                        field_name = label_line.label_field_id.name  # 这个是标签字段的名字 如 x_sale 这样的字段(这里有多个)
+                        field_description = label_line.label_field_id.field_description
+                        xml_page_field = etree.SubElement(xml_node, 'field', {'name': field_name})
+                        xml_page_field.attrib['string'] = _(field_description)
 
         # Create the actual node inside the xpath. It needs to be the first
         # child of the xpath to respect the order in which they were added.
@@ -338,12 +400,13 @@ class AddLabel(models.Model):
 
     # 删除页签
     @api.multi
-    def delete_from_page(self):
+    def delete_from_page(self, models_key):
         """
         删除页签
         :return:
         """
-        model_env = self.env['ir.model'].search([('id', '=', self.apply_to_model.id)])
+        # 多个模型的haunt处理掉这个东西
+        model_env = self.env['ir.model'].search([('model', '=', models_key)])
         result = self._find_model_default_from(model_env, view_type='form')
         view_id = result['view_id']  # 416
         view = self.env['ir.ui.view'].browse(view_id)
@@ -358,7 +421,6 @@ class AddLabel(models.Model):
         :return: 返回修正后的结果
         """
         View = self.env['ir.ui.view']
-        # model_env = self.env['ir.model'].search([('id', '=', self.apply_to_model.id)])
         # Get the view arch and all other attributes describing the composition of the view
         result = self._find_model_default_from(models_name_env, view_type='form')
         # 获取视图id
@@ -367,8 +429,24 @@ class AddLabel(models.Model):
         result['arch'] = xarch
         result['fields'] = xfields
         view_id = result['view_id']
-        # self.get_label_field()  # 编辑多个标签和name的属性值
-        arch = etree.fromstring(
+        # 这里需要判断原本来的from视图中是不是有标签这一属性没有的话新增一个
+        arch_re = r'<notebook>'
+        re_result = re.search(arch_re, xarch)
+        if not re_result:
+            arch = etree.fromstring(
+                """<data>
+                       <xpath expr="//form[1]/sheet[1]" position="inside">
+                            <notebook>
+                               <page string="标签" id="add_label">
+                                   <group string="标签信息">
+                                    </group>
+                               </page>
+                            </notebook>
+                       </xpath>
+                   </data>
+                """)
+        else:
+            arch = etree.fromstring(
                 """<data>
                        <xpath expr="//form[1]/sheet[1]/notebook[1]" position="inside">
                            <page string="标签" id="add_label">
@@ -387,19 +465,19 @@ class AddLabel(models.Model):
         studio_view = self._get_studio_view(view)  # 获取页面的位置并给到数据信息
         fields_view = ViewModel.fields_view_get(view.id, view.type)
         return {
-                'fields_views':fields_view,
-                'fields':ViewModel.fields_get(),
-                'studio_view_id':studio_view.id,
-                }
+            'fields_views': fields_view,
+            'fields': ViewModel.fields_get(),
+            'studio_view_id': studio_view.id,
+        }
 
-    # 获取新的xpth
+    # 获取新的xpath
     @api.multi
     def _get_xpath_node(self, arch):
         expr = '//' + 'form[1]/sheet[1]/notebook[1]/page[@id="add_label"]/group[1]'
         return etree.SubElement(arch, 'xpath', {
-                'expr':expr,
-                'position':'after'
-                })
+            'expr': expr,
+            'position': 'after'
+        })
 
     # 将全部字段添加到对应的页签中
     @api.multi
@@ -411,11 +489,10 @@ class AddLabel(models.Model):
             label_env = self.env['add.label'].search([('apply_to_model.id', '=', models_name_env.id)])
             for label in label_env:
                 for label_line in label.label_line:
-                    field_name = label_line.label_field_id.name  # 这个是标签字段的名字 如 x_sale 这样的字段(这里有多个)
+                    field_name = label_line.label_field_id.name
                     field_description = label_line.label_field_id.field_description
-                    xml_page_field = etree.SubElement(xml_node, 'field', {'name':field_name})
+                    xml_page_field = etree.SubElement(xml_node, 'field', {'name': field_name})
                     xml_page_field.attrib['string'] = _(field_description)
-
         xml_node = etree.Element('group', {})  # 这里是增加后的属性
         add_columns(xml_node)
         xpath_node.insert(0, xml_node)
@@ -479,7 +556,7 @@ class AddLabel(models.Model):
                                 view_type = "form"
                                 target = "new"
                                 multi = "True"/>
-                        """ % {'fields':action_id_name, 'field':self.apply_to_model.name}
+                        """ % {'fields': action_id_name, 'field': self.apply_to_model.name}
         else:
             new_action = """
                              <act_window
@@ -491,7 +568,7 @@ class AddLabel(models.Model):
                                view_type = "form"
                                target = "new"
                                multi = "True"/>
-                         """ % {'fields':action_id_name, 'field':models_name_env.model}
+                         """ % {'fields': action_id_name, 'field': models_name_env.model}
             # 获取文件的位置并写入到对应的xml里面用xpth定位文件位置
         mes = etree.XML(new_action)
         return mes
@@ -510,21 +587,20 @@ class AddLabel(models.Model):
 
     # 删除tree中的动作标签
     @api.multi
-    def delete_action(self):
+    def delete_action(self, models_key):
         """
         删除动作标签
         :return:
         """
-        model_env = self.env['ir.model'].search([('id', '=', self.apply_to_model.id)])
+        # 传过来的只有一个,在前前面就一个一个的处理了
         tree = ET.parse(PATH_add)
         root = tree.getroot()
         root = root.findall('data')
         for action in root:
             for rem in action.findall('act_window'):
-                if rem.get('src_model') == model_env.model:
+                if rem.get('src_model') == models_key:
                     root[0].remove(rem)
-                    tree.write(PATH_add,
-                               encoding="utf-8", xml_declaration=True)
+                    tree.write(PATH_add, encoding="utf-8", xml_declaration=True)
                     # 外面调用更新模块
                     self._update_model()
 
@@ -532,25 +608,25 @@ class AddLabel(models.Model):
     @api.multi
     def _create_studio_view(self, view, arch):
         return self.env['ir.ui.view'].create({
-                'type':view.type,
-                'model':view.model,
-                'inherit_id':view.id,
-                'mode':'extension',
-                'priority':99,
-                'arch':arch,
-                'name':self._generate_studio_view_name(view),
-                })
+            'type': view.type,
+            'model': view.model,
+            'inherit_id': view.id,
+            'mode': 'extension',
+            'priority': 99,
+            'arch': arch,
+            'name': self._generate_studio_view_name(view),
+        })
 
     # 设置页面
     @api.multi
     def _set_label_view(self, view, arch):
-        studio_view = self._get_studio_view(view)  # 这里没有数据的时候 就正常了
+        studio_view = self._get_studio_view(view)  # 这里没有数据的时候
         if studio_view and len(arch):
             studio_view.arch_db = arch  # 如果有这替换一下更新就行
         elif studio_view:
-            studio_view.unlink()  # 删除了标签 这个可以的 哈哈哈
+            studio_view.unlink()  # 删除了标签
         elif len(arch):
-            self._create_studio_view(view, arch)
+            self._create_studio_view(view, arch)  # 创建一个新的标签
 
     # 获取页面
     @api.multi

@@ -8,18 +8,6 @@
                 <sheet>
                     <div class="oe_button_box" name="button_box">
 
-                        <!--                        <button string="查看xml的内容" type="object" name="check_allres"-->
-                        <!--                                class="oe_stat_button" icon="fa-refresh" options="{}"/>-->
-
-                        <!--                         <button string="删除动作" type="object" name="delete_action"-->
-                        <!--                                class="oe_stat_button" icon="fa-refresh" options="{}"/>-->
-
-                        <!--                        <button string="加动作" type="object" name="create_action_to_tree"-->
-                        <!--                                class="oe_stat_button" icon="fa-refresh" options="{}"/>-->
-
-                        <!--                        <button string="加页签" type="object" name="add_page_to_from"-->
-                        <!--                                class="oe_stat_button" icon="fa-refresh" options="{}"/>-->
-
                         <button string="模型记录(多个标签)" type="object" name="action_view_model_tree"
                                 class="oe_stat_button" icon="fa-refresh" options="{}"
                                 attrs="{'invisible': [('apply_to_model','=',False)]}"/>

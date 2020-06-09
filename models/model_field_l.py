@@ -22,7 +22,7 @@ class AddLabelFields(models.Model):
     field_description = fields.Char(string=u'字段标签', default='', required=True, translate=True)  # 字段的标签
     infos = fields.Char(string='字段备注')
     help = fields.Text(string=u'字段帮助', translate=True)
-    ttype = fields.Selection(selection=FIELD_TYPES, string=u'字段类型', required=True)
+    ttype = fields.Selection(selection=FIELD_TYPES, string=u'字段类型', required=True, default='char')
     copied = fields.Boolean(string='复制', oldname='copy', default=True,
                             help="在复制记录时是否复制该值.")
     readonly = fields.Boolean(string='是否只读')
@@ -32,6 +32,7 @@ class AddLabelFields(models.Model):
     groups = fields.Many2many('res.groups', 'ir_model_fields_group_rel', 'field_id', 'group_id')
     store = fields.Boolean(string='是否存入数据库', default=True, help="是否存入数据库.默认是")
     state = fields.Boolean(string='字段状态', default=True)
+    set_value = fields.Boolean(string=u"是否设置了值", default=False)
 
     @api.multi
     @api.onchange('name')

@@ -53,7 +53,8 @@ class SetLabelValue(models.Model):
     @api.multi
     def to_value(self):
         """
-        :return:
+        对选择的记录和对应的标签赋值
+        :return:None
         """
         context = dict(self._context or {})
         active_ids = context.get('active_ids')
@@ -66,4 +67,4 @@ class SetLabelValue(models.Model):
                 name_write = self.label_select_field
                 if not self.label_select_field_value:
                     self.label_select_field_value = ''
-                model_env.sudo().write({name_write:self.label_select_field_value})  # 将值赋给到对应的记录中去了
+                model_env.sudo().write({name_write: self.label_select_field_value})  # 将值赋给到对应的记录中去了
