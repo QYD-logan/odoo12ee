@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 {
         'name': "添加标签",
@@ -34,6 +35,7 @@
                 'views/add_fields_l.xml',
                 
                 'wizard/btm.label.value.xml',
+                'wizard/datale_label_inv_view.xml'
         ],
         # only loaded in demonstration mode
         'demo': [

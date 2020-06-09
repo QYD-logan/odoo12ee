@@ -1,5 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <odoo>
     <data>
+        <act_window id="product_product_action_label_id" multi="True" name="标签管理" res_model="btm.label.value"
+                    src_model="product.product" target="new" view_mode="form,tree" view_type="form"/>
     </data>
 </odoo>

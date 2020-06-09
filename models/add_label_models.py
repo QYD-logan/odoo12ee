@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 # @Time    : 2020/5/16 13:11
 # @Author  : logan
@@ -188,12 +189,40 @@ class AddLabel(models.Model):
                     line_env = self.env['add.label.line'].search([('id', '=', res[1])])
                     models_name = models_name_env.model  # 这个需要的是sale,order这样的名字
                     fields_name = line_env.label_field_id.name
+                    # 判断删除的字段是不是没被应用
+                    results_all = {models_name: [fields_name]}
+                    results_use = self.check_label_be_useing(results_all)
+                    for k in results_use:
+                        if results_use[k]:
+                            raise UserError(_('不能删除模型已经使用标签字段'))
+
                     self.delete_page_to_from(models_name, fields_name)  # 删除页签 这里调用过需要处理下 模型的id 和需要删除的字段名称fields_value
                     field_env = self.env['ir.model.fields'].search([('name', '=', line_env.label_field_id.name),
                                                                     ('model', '=', self.apply_to_model.model)])
                     field_env.unlink()  # 删除对应的模型字段
                     result = super(AddLabel, self).write(vals)
             return result
+
+    @api.multi
+    def mandatory_delete(self):
+        """
+        弹窗提示是不是亲强制商删除字段
+        :return: 返回瞬态窗口
+        """
+        view = self.env.ref('add_label.mandatory_delete_view_wizard')
+        wiz = self.env['mandatory.delete']
+        return {
+            'name': _('是否删除？'),
+            'type': 'ir.actions.act_window',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'mandatory.delete',
+            'views': [(view.id, 'form')],
+            'view_id': view.id,
+            'target': 'new',
+            'res_id': wiz.id,
+            'context': self.env.context,
+        }
 
     @api.multi
     def check_label_be_useing(self, results_all):
@@ -343,7 +372,23 @@ class AddLabel(models.Model):
         result['arch'] = xarch
         result['fields'] = xfields
         view_id = result['view_id']
-        arch = etree.fromstring(
+        arch_re = r'</page>'
+        re_result = re.findall(arch_re, xarch)
+        if len(re_result) <= 1:
+            arch = etree.fromstring(
+                """<data>
+                       <xpath expr="//form[1]/sheet[1]" position="inside">
+                            <notebook>
+                               <page string="标签" id="add_label">
+                                   <group string="标签信息">
+                                    </group>
+                               </page>
+                            </notebook>
+                       </xpath>
+                   </data>
+                """)
+        else:
+            arch = etree.fromstring(
                 """<data>
                        <xpath expr="//form[1]/sheet[1]/notebook[1]" position="inside">
                            <page string="标签" id="add_label">
@@ -430,9 +475,9 @@ class AddLabel(models.Model):
         result['fields'] = xfields
         view_id = result['view_id']
         # 这里需要判断原本来的from视图中是不是有标签这一属性没有的话新增一个
-        arch_re = r'<notebook>'
-        re_result = re.search(arch_re, xarch)
-        if not re_result:
+        arch_re = r'</page>'
+        re_result = re.findall(arch_re, xarch)
+        if len(re_result) <= 1:
             arch = etree.fromstring(
                 """<data>
                        <xpath expr="//form[1]/sheet[1]" position="inside">

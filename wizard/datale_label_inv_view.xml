@@ -1,0 +1,17 @@
+<odoo>
+    <record id="mandatory_delete_view_wizard" model="ir.ui.view">
+        <field name="name">mandatory_delete.delivery_view_wizard</field>
+        <field name="model">mandatory.delete</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="note" placeholder="本次删除的模型中有已经使用的字段请谨慎删除" readonly="1"/>
+                </group>
+                <footer>
+                    <button name="to_delete" string="确认删除" type="object" class="oe_highlight"/>
+                    <button string="不删除" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
