@@ -83,18 +83,15 @@ class AddLabel(models.Model):
         Model = self.env[models_name_env.model]
         # 获取字段定义模型中的数据
         label_field_env = self.env['add.label.fields'].search(
-                [('id', '=', values[2]['label_field_id'])])
+            [('id', '=', values[2]['label_field_id'])])
         # If the model is backed by a sql view
         # it doesn't make sense to add field, and won't work
         table_kind = sql.table_kind(self.env.cr, Model._table)
         if not table_kind or table_kind == 'v':
             raise UserError(_('The model %s doesnt support adding fields.') % Model._name)
         model = self.env['ir.model'].search([('model', '=', model_name)])
-        value = {}
-        value['model_id'] = model.id
-        value['name'] = label_field_env.name
-        value['ttype'] = label_field_env.ttype
-        value['field_description'] = label_field_env.field_description
+        value = {'model_id': model.id, 'name': label_field_env.name, 'ttype': label_field_env.ttype,
+                 'field_description': label_field_env.field_description}
         # Create new field
         new_field = self.env['ir.model.fields'].create(value)
         return new_field
@@ -196,7 +193,7 @@ class AddLabel(models.Model):
                         if results_use[k]:
                             raise UserError(_('不能删除模型已经使用标签字段'))
 
-                    self.delete_page_to_from(models_name, fields_name)  # 删除页签 这里调用过需要处理下 模型的id 和需要删除的字段名称fields_value
+                    self.delete_page_to_from(models_name, fields_name)  # 删除页签
                     field_env = self.env['ir.model.fields'].search([('name', '=', line_env.label_field_id.name),
                                                                     ('model', '=', self.apply_to_model.model)])
                     field_env.unlink()  # 删除对应的模型字段
@@ -665,13 +662,13 @@ class AddLabel(models.Model):
     # 设置页面
     @api.multi
     def _set_label_view(self, view, arch):
-        studio_view = self._get_studio_view(view)  # 这里没有数据的时候
+        studio_view = self._get_studio_view(view)
         if studio_view and len(arch):
-            studio_view.arch_db = arch  # 如果有这替换一下更新就行
+            studio_view.arch_db = arch
         elif studio_view:
-            studio_view.unlink()  # 删除了标签
+            studio_view.unlink()
         elif len(arch):
-            self._create_studio_view(view, arch)  # 创建一个新的标签
+            self._create_studio_view(view, arch)
 
     # 获取页面
     @api.multi
