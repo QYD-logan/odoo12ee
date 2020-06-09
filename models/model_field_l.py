@@ -50,7 +50,6 @@ class AddLabelFields(models.Model):
 
     @api.multi
     def unlink(self):
-        print('删除标签字段操作')
         # 获取标签行模型,
         name = ''
         for one in self:
@@ -64,7 +63,6 @@ class AddLabelFields(models.Model):
 
     @api.multi
     def write(self, vals):
-        print('修改标签字段操作')
         label_line = self.env['add.label.line'].search([('label_field_id', '=', self.id)])
         if label_line:
             raise ValidationError(_("此字段已被标签使用不允许修改!如有需要请新增"))
