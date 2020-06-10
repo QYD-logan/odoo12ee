@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 # @Time    : 2020/5/16 13:11
 # @Author  : logan
@@ -31,26 +30,31 @@ PATH_add = load_field_address()
 
 class AddLabel(models.Model):
     _name = 'add.label'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = 'label_name'
     _description = '标签'
 
-    label_name = fields.Char(string=u'标签名称', help='标签名字不能重复', copy=False)
-    apply_to_model = fields.Many2one('ir.model', 'Model', index=True, help='Specify a model for the label.')  # 标签关联的模型
-    label_model_record = fields.Many2one('')
+    label_name = fields.Char(string=u'标签名称', help='标签名字不能重复', copy=False, track_visibility='always')
+    apply_to_model = fields.Many2one('ir.model', 'Model', index=True, help='Specify a model for the label.',
+                                     track_visibility='always')  # 标签关联的模型
     label_line = fields.One2many('add.label.line', 'label_id', string='label Lines', copy=True, auto_join=True)
     label_summary = fields.Char(string=u'摘要')  # 注释
-    label_note = fields.Char(string=u'备注')  # 注释
+    label_note = fields.Char(string=u'备注', track_visibility='always')  # 注释
     field_ids = fields.Char(string=u'字段')
     access_ids = fields.Char(string=u'访问权限')
     infos = fields.Char(string=u'字段备注')
     sequence = fields.Integer(string=u'序号')
     label_field_id = fields.Char(string=u'标签字段')
+    state = fields.Selection(
+        [('editor', '编辑中'),
+         ('done', '完成')],
+        string='标签状态', default='editor', track_visibility='always')
 
     _sql_constraints = [('unique_label_name', 'unique (label_name)', u'标签名字重复请重新命名')]
 
     models_summary = fields.Char(string=u'使用标签的模型')
 
-    # 这里检查是不是全部是删除了这个东西
+    # 这里检查是不是全部是删除了
     @api.multi
     def get_label_field_sum(self, models_key, fields_value):
         """
@@ -81,7 +85,7 @@ class AddLabel(models.Model):
         # Get current model
         model_name = models_name_env.model
         Model = self.env[models_name_env.model]
-        # 获取字段定义模型中的数据
+        # 获取字段模型中的数据
         label_field_env = self.env['add.label.fields'].search(
             [('id', '=', values[2]['label_field_id'])])
         # If the model is backed by a sql view
@@ -89,9 +93,20 @@ class AddLabel(models.Model):
         table_kind = sql.table_kind(self.env.cr, Model._table)
         if not table_kind or table_kind == 'v':
             raise UserError(_('The model %s doesnt support adding fields.') % Model._name)
-        model = self.env['ir.model'].search([('model', '=', model_name)])
-        value = {'model_id': model.id, 'name': label_field_env.name, 'ttype': label_field_env.ttype,
-                 'field_description': label_field_env.field_description}
+        # 对value的值进行处理
+        value = {'model_id': models_name_env.id, 'name': label_field_env.name, 'ttype': label_field_env.ttype,
+                 'field_description': label_field_env.field_description}  # 这4个是必须的值,判断其他的值得情况
+
+        if label_field_env.help:
+            value['help'] = label_field_env.help
+        if label_field_env.track_visibility:
+            value['track_visibility'] = label_field_env.track_visibility
+        if label_field_env.readonly:
+            value['readonly'] = label_field_env.readonly
+        # if label_field_env.groups:
+        #     value['groups'] = label_field_env.groups
+        else:
+            pass
         # Create new field
         new_field = self.env['ir.model.fields'].create(value)
         return new_field
@@ -113,10 +128,11 @@ class AddLabel(models.Model):
         else:
             for result in values['label_line']:
                 self.create_new_field(result, models_name_env)
+            values['state'] = 'done'
             res = super(AddLabel, self).create(values)
             self.add_page_to_from(models_name_env)  # 添加页签
             self.create_action_to_tree(models_name_env)  # 添加动作
-        return res
+            return res
 
     # 字段管理啊视图界面
     @api.multi
@@ -154,7 +170,7 @@ class AddLabel(models.Model):
         """
         # 获取原始的模型信息
         label_env = self.search([('label_name', '=', self.label_name)])
-        if not label_env.apply_to_model:
+        if not label_env.apply_to_model or label_env.state == 'editor':
             pass
         else:
             if label_env.apply_to_model != self.apply_to_model:
@@ -181,7 +197,7 @@ class AddLabel(models.Model):
                     self.create_action_to_tree(models_name_env)  # 创建动作
                     # 新增页签
                     self.add_page_to_from(models_name_env)  # 增加页签
-            
+
                 elif res[0] == 2:  # 这个是删除行
                     line_env = self.env['add.label.line'].search([('id', '=', res[1])])
                     models_name = models_name_env.model  # 这个需要的是sale,order这样的名字
@@ -272,7 +288,7 @@ class AddLabel(models.Model):
             if results_u[k]:
                 raise UserError(_('不能删除模型已经使用标签字段'))
                 # raise UserError(_('不能删除模型%s中已经使用的%s标签字段') % (k, results_u[k]))
-    
+
         # 这里对全部需要删除的东西进行处理掉了
         for models_key, fields_value in results_all.items():
             num = self.get_label_field_sum(models_key, fields_value)  # True 删除完全  False没有完全删除
@@ -416,7 +432,7 @@ class AddLabel(models.Model):
         :return: 返回对应的xpatch
         """
         xpath_node = self._get_xpath_node(arch)
-    
+
         def add_columns(xml_node):  # 将field 到对应的模型中 xml_node这个就是对应的模型
             # 获取模型的全部属性
             model_env = self.env['ir.model'].search([('model', '=', models_key)])
@@ -535,6 +551,8 @@ class AddLabel(models.Model):
                     field_description = label_line.label_field_id.field_description
                     xml_page_field = etree.SubElement(xml_node, 'field', {'name': field_name})
                     xml_page_field.attrib['string'] = _(field_description)
+                    # xml_page_field.attrib['widget'] = _('mail_activity')
+
         xml_node = etree.Element('group', {})  # 这里是增加后的属性
         add_columns(xml_node)
         xpath_node.insert(0, xml_node)
