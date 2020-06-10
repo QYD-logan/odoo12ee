@@ -16,9 +16,6 @@ class AddLabelFields(models.Model):
     _description = '标签字段'
 
     name = fields.Char(string='字段名字', default='x_', required=True, index=True)
-    # complete_name = fields.Char(index=True)
-    # relation = fields.Char(string=u'对象关系',
-    #                        help="对于关系字段，是目标模型的技术名称")
     field_description = fields.Char(string=u'字段标签', default='', required=True, translate=True)  # 字段的标签
     infos = fields.Char(string='字段备注')
     help = fields.Text(string=u'字段帮助', translate=True)
@@ -30,9 +27,12 @@ class AddLabelFields(models.Model):
     size = fields.Integer(string='字段大小', default='64')
     domain = fields.Char(default="[]", string=u'域')
     groups = fields.Many2many('res.groups', 'ir_model_fields_group_rel', 'field_id', 'group_id')
-    store = fields.Boolean(string='是否存入数据库', default=True, help="是否存入数据库.默认是")
+    store = fields.Boolean(string='是否存入数据库', default=True, help="是否存入数据库默认是")
     state = fields.Boolean(string='字段状态', default=True)
-    set_value = fields.Boolean(string=u"是否设置了值", default=False)
+    track_visibility = fields.Selection(
+        [('onchange', "On Change"), ('always', "Always")], string="跟踪",
+        help="设置后，对该字段的每次修改都会在聊天记录中跟踪.", default='onchange'
+    )
 
     @api.multi
     @api.onchange('name')
@@ -46,7 +46,14 @@ class AddLabelFields(models.Model):
                 msg = _("Field names can only contain characters, digits and underscores (up to 63).")
                 raise ValidationError(msg)
 
-    # 当删除标签字段的时候对标签字段是不是使用进行一个校验
+    # 校验选择其他类型字段
+    @api.multi
+    @api.onchange('ttype')
+    def _check_ttype(self):
+        value = ['many2many', 'many2one', 'one2many', 'html', 'selection', 'reference']
+        if self.ttype in value:
+            msg = (_("%s字段类型暂时不能使用") % self.ttype)
+            raise ValidationError(msg)
 
     @api.multi
     def unlink(self):

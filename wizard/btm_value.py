@@ -14,13 +14,12 @@ class SetLabelValue(models.Model):
         context = dict(self._context or {})  # 获取
         models_id = self.env['ir.model'].search([('model', '=', context.get('active_model'))]).id
         label_env = self.env['add.label'].search([('apply_to_model.id', '=', models_id)])  # 这个是对应add
-        res = []
         label_onde = []
         for label in label_env:
             for label_line in label.label_line:
-                res.append(label_line.label_field_id.id)
-                valu = (label_line.label_field_id.name, label_line.label_field_id.field_description)
-                label_onde.append(valu)
+                if not label_line.label_field_id.readonly:  # 自读字段不现实上去
+                    valu = (label_line.label_field_id.name, label_line.label_field_id.field_description)
+                    label_onde.append(valu)
         return label_onde
 
     label_field_name = fields.Char(string='字段名称')  # 字段名字 x_ 这样的

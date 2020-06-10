@@ -9,8 +9,7 @@
         添加标签 """,
         
         'description': """
-        添加标签
-    """,
+        添加标签""",
         
         'author': "logan.Qian,",
         'website': "http://www.yourcompany.com",
@@ -22,7 +21,7 @@
         'version': '0.1',
         
         # any module necessary for this one to work correctly
-        'depends': ['base', 'base_setup', 'sale', 'bus', 'web_tour'],
+        'depends': ['base', 'base_setup', 'sale', 'bus', 'web', 'mail'],
         
         # always loaded
         'data': [
