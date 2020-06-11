@@ -34,6 +34,8 @@ class AddLabelFields(models.Model):
         help="设置后，对该字段的每次修改都会在聊天记录中跟踪.", default='onchange'
     )
 
+    _sql_constraints = [('unique_label_fields_name', 'unique (name)', u'字段名称不能重复')]
+
     @api.multi
     @api.onchange('name')
     def _check_name(self):

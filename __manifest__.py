@@ -28,13 +28,12 @@
                 # 'security/add_label_group.xml',
                 'security/ir.model.access.csv',
                 # 'views/views.xml',
-                'views/templates.xml',
+                # 'views/templates.xml',
                 # 'views/add_label.xml',
                 'views/add_hear_label.xml',
                 'views/add_fields_l.xml',
                 
                 'wizard/btm.label.value.xml',
-                'wizard/datale_label_inv_view.xml'
         ],
         # only loaded in demonstration mode
         'demo': [
