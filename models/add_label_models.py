@@ -203,6 +203,22 @@ class AddLabel(models.Model):
             "view_mode": 'tree,form',
         }
 
+    # onchange(行不能重复)
+    @api.multi
+    @api.onchange("label_line")
+    def _check_label_line_repeat(self):
+        """
+        保证行中的字段不能重复
+        :return:
+        """
+        check_repeat = []
+        for onr in self.label_line:
+            if onr.label_field_id.id:
+                if onr.label_field_id.id not in check_repeat:
+                    check_repeat.append(onr.label_field_id.id)
+                else:
+                    raise AccessError(_("请勿要重复添加此标签"))
+
     # onchange(改变模型的时候提醒)
     @api.multi
     @api.onchange("apply_to_model")
@@ -576,28 +592,6 @@ class AddLabel(models.Model):
                 'studio_view_id': studio_view.id,
             }
 
-        # else:
-        #     arch = etree.fromstring(
-        #         """<data>
-        #                <xpath expr="//form[1]" position="inside">
-        #                        <group string="标签信息">
-        #                         </group>
-        #                </xpath>
-        #            </data>
-        #         """)
-        #     view = self.env['ir.ui.view'].browse(view_id)
-        #     self._field_add(arch, models_name_env)  # 件对应的field加到对应页面上xpath上去
-        #     new_arch = etree.tostring(arch, encoding='unicode', pretty_print=True)
-        #     self._set_label_view(view, new_arch)
-        #     ViewModel = self.env[view.model]
-        #     studio_view = self._get_studio_view(view)  # 获取页面的位置并给到数据信息
-        #     fields_view = ViewModel.fields_view_get(view.id, view.type)
-        #     return {
-        #         'fields_views': fields_view,
-        #         'fields': ViewModel.fields_get(),
-        #         'studio_view_id': studio_view.id,
-        #     }
-
     # 获取新的xpath
     @api.multi
     def _get_xpath_node(self, arch):
@@ -804,7 +798,7 @@ class AddLabelLine(models.Model):
     @api.onchange('label_field_id')
     def _get_name_value(self):
         """
-        当改变增加标签行的时候如果字段已经在此模型值提示不能增加
+        当改变增加标签行的时候如果字段已经在此模型值提示不能增加 上面已经选了也不能在选了
         :return:
         """
         model_env = self.env['ir.model'].search([('id', '=', self.label_id.apply_to_model.id),
@@ -813,6 +807,7 @@ class AddLabelLine(models.Model):
         for manual_id in model_manual_env:
             if manual_id.state == 'manual' and manual_id.name == self.label_field_id.name:
                 raise ValidationError(_('%s字段在,%s中存在') % (self.label_field_id.name, self.label_id.apply_to_model.name))
+    
         self.name = self.label_field_id.name
         self.field_description = self.label_field_id.field_description
         self.infos = self.label_field_id.infos
