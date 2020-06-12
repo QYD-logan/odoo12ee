@@ -1,0 +1,60 @@
+<odoo>
+    <data>
+        <!-- explicit list view definition -->
+        <!--
+        <record model="ir.ui.view" id="group_database.list">
+          <field name="name">group_database list</field>
+          <field name="model">group_database.group_database</field>
+          <field name="arch" type="xml">
+            <tree>
+              <field name="name"/>
+              <field name="value"/>
+              <field name="value2"/>
+            </tree>
+          </field>
+        </record>
+        -->
+
+        <!-- actions opening views on models -->
+        <!--
+        <record model="ir.actions.act_window" id="group_database.action_window">
+          <field name="name">group_database window</field>
+          <field name="res_model">group_database.group_database</field>
+          <field name="view_mode">tree,form</field>
+        </record>
+        -->
+
+        <!-- server action to the one above -->
+        <!--
+        <record model="ir.actions.server" id="group_database.action_server">
+          <field name="name">group_database server</field>
+          <field name="model_id" ref="model_group_database_group_database"/>
+          <field name="state">code</field>
+          <field name="code">
+            action = {
+              "type": "ir.actions.act_window",
+              "view_mode": "tree,form",
+              "res_model": self._name,
+            }
+          </field>
+        </record>
+        -->
+
+        <!-- Top menu item -->
+        <!--
+        <menuitem name="group_database" id="group_database.menu_root"/>
+        -->
+        <!-- menu categories -->
+        <!--
+        <menuitem name="Menu 1" id="group_database.menu_1" parent="group_database.menu_root"/>
+        <menuitem name="Menu 2" id="group_database.menu_2" parent="group_database.menu_root"/>
+        -->
+        <!-- actions -->
+        <!--
+        <menuitem name="List" id="group_database.menu_1_list" parent="group_database.menu_1"
+                  action="group_database.action_window"/>
+        <menuitem name="Server to list" id="group_database" parent="group_database.menu_2"
+                  action="group_database.action_server"/>
+        -->
+    </data>
+</odoo>
